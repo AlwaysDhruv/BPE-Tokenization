@@ -8,6 +8,11 @@ using namespace std;
 int main()
 {
     ifstream file("vocab.json");
+    if (!file.is_open())
+    {
+        cerr << "Failed to open vocab.json\n";
+        return 1;
+    }
     json data;
     try
     {
@@ -20,7 +25,13 @@ int main()
     }
     string c;
     cout << "Enter :- ";
-    cin >> c;
-    if (data.contains(c)) cout << data[c].dump(4);
+    getline(cin, c);
+    for (int i = 0; i < c.size(); ++i)
+    {
+        string key(1, c[i]);
+        if (data.contains(key)) cout << key << " = " << data[key].dump(4) << endl;
+        else cout << key << " Not found in this file " << endl;
+    }
+    file.close();
     return 0;
 }
