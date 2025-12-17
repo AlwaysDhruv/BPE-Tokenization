@@ -7,20 +7,25 @@
 using namespace std;
 using json = nlohmann::json;
 
-double ascii(string, string);
+void fetch_json_data(unordered_map<char, double>&, string);
 
 int main()
 {
-    ifstream file("vocab.json");
-    json data;
-    file >> data;
-    file.close();
     unordered_map<char, double> vocab;
-    for(auto& [key, values] : data.items())
-    {
-        if (key.size() == 1)
-            vocab[key[0]] = values.get<double>();
-    }
+    fetch_json_data(vocab, "vocab.json");
+    
     return 0;
 }
 
+void fetch_json_data(unordered_map<char, double>& vcb, string path)
+{
+    ifstream file(path);
+    json data;
+    file >> data;
+    file.close();
+    for(auto& [key, values] : data.items())
+    {
+        if (key.size() == 1)
+            vcb[key[0]] = values.get<double>();
+    }
+}
