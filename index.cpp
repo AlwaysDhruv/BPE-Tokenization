@@ -11,6 +11,8 @@ using json = nlohmann::json;
 void fetch_json_data(unordered_map<char, double>&, string);
 int tokens_to_pairs(vector<double>&,vector<vector<double>>&);
 int fetch_text_data_to_tokens(unordered_map<char, double>&, vector<double>&, string);
+template <typename vectr> void display(vector<vector<vectr>>&);
+template <typename vectrr> void displayy(vector<vector<vectrr>>&);
 
 int main()
 {
@@ -23,7 +25,30 @@ int main()
     vector<vector<double>> pairs;
     tokens_to_pairs(tokens, pairs);
 
-    cout << pairs.size() << " "  << pairs[0].size() << endl;
+    display(pairs);
+    cout << endl << endl;
+    
+    sort(pairs.begin(), pairs.end());
+
+    display(pairs);
+    cout << endl << endl;
+    for (int k = 0; k < pairs.size(); ++k)
+    for (int i = 0; i < pairs.size() - k - 1; ++i)
+    {
+        int ct = 0;
+        bool is_that = false;
+        if (pairs[i][0]==pairs[i+1][0] && pairs[i][1]==pairs[i+1][1])
+        {
+            is_that = true;
+            while(pairs[i][0]==pairs[i+1][0] && pairs[i][1]==pairs[i+1][1])
+            {
+                ++ct;
+                ++i;
+            }
+            cout << pairs[i + 1][0] << " , " << pairs[i + 1][1] << " :- " << ct + 1 << endl;
+        }
+        else if (is_that==false) cout << pairs[i][0] << " " << pairs[i][1] << " :- " << ct + 1 << endl; 
+    }
     return 0;
 }
 
@@ -80,4 +105,27 @@ int tokens_to_pairs(vector<double>& tokens ,vector<vector<double>>& pairs)
         }
     }
     return pairs.size();
+}
+
+template <typename vectr> void display(vector<vector<vectr>>& vec)
+{
+    for (auto& values : vec)
+    {
+        for (auto& value : values) cout << value << " ";
+        cout << endl;
+    }
+}
+
+template <typename vectrr> void displayy(vector<vector<vectrr>>& vec)
+{
+    for (auto& values : vec)
+    {
+        for (auto& value : values)
+        {    
+            for (auto& val : value)
+                cout << val << " ";
+            cout << endl;
+        }
+        cout << endl;
+    }
 }
