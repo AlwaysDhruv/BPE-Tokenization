@@ -25,30 +25,9 @@ int main()
     vector<vector<double>> pairs;
     tokens_to_pairs(tokens, pairs);
 
-    display(pairs);
-    cout << endl << endl;
-    
     sort(pairs.begin(), pairs.end());
 
     display(pairs);
-    cout << endl << endl;
-    for (int k = 0; k < pairs.size(); ++k)
-    for (int i = 0; i < pairs.size() - k - 1; ++i)
-    {
-        int ct = 0;
-        bool is_that = false;
-        if (pairs[i][0]==pairs[i+1][0] && pairs[i][1]==pairs[i+1][1])
-        {
-            is_that = true;
-            while(pairs[i][0]==pairs[i+1][0] && pairs[i][1]==pairs[i+1][1])
-            {
-                ++ct;
-                ++i;
-            }
-            cout << pairs[i + 1][0] << " , " << pairs[i + 1][1] << " :- " << ct + 1 << endl;
-        }
-        else if (is_that==false) cout << pairs[i][0] << " " << pairs[i][1] << " :- " << ct + 1 << endl; 
-    }
     return 0;
 }
 
