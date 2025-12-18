@@ -27,7 +27,17 @@ int main()
 
     sort(pairs.begin(), pairs.end());
 
-    display(pairs);
+    for (int i = 0; i < pairs.size(); ++i)
+    {
+        for (int j = i; j < pairs.size(); ++j)
+        {
+            if (pairs[i][0]==pairs[j][0] && pairs[i][1]==pairs[j][1])
+            {
+                cout  << i << " " << pairs[i][0] << " " << pairs[i][1] << " : " << pairs[j][0] << " " << pairs[j][1] << endl;
+                break;
+            }
+        }
+    }
     return 0;
 }
 
