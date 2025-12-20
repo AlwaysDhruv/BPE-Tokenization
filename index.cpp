@@ -25,11 +25,8 @@ int main()
     vector<vector<double>> pairs;
     tokens_to_pairs(tokens, pairs);
 
-/*    display(pairs);
-    cout << endl << endl; */
-
     bool isthat[pairs.size()] = {false};
-    vector<double> frequecy;
+    vector<vector<double>> frequecy;
     for (int i = 0; i < pairs.size(); ++i)
     {
         if (isthat[i]) continue;
@@ -42,13 +39,11 @@ int main()
                 ++ct;
             }
         }
-        frequecy.push_back(ct);
+        frequecy.push_back({pairs[i][0], pairs[i][1], double(ct)});
     }
-
-    for (auto& fre : frequecy)
-    {
-        cout << fre << " ";
-    }
+    
+    display(frequecy);          
+    
     return 0;
 }
 
