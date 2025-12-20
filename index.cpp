@@ -14,6 +14,11 @@ int fetch_text_data_to_tokens(unordered_map<char, double>&, vector<double>&, str
 template <typename vectr> void display(vector<vector<vectr>>&);
 template <typename vectrr> void displayy(vector<vector<vectrr>>&);
 
+struct Frequency
+{
+    double token1, token2, ct;
+};
+
 int main()
 {
     unordered_map<char, double> vocab;
@@ -26,7 +31,9 @@ int main()
     tokens_to_pairs(tokens, pairs);
 
     bool isthat[pairs.size()] = {false};
-    vector<vector<double>> frequecy;
+
+    vector<Frequency> fre;    
+
     for (int i = 0; i < pairs.size(); ++i)
     {
         if (isthat[i]) continue;
@@ -39,11 +46,14 @@ int main()
                 ++ct;
             }
         }
-        frequecy.push_back({pairs[i][0], pairs[i][1], double(ct)});
+        fre.push_back({pairs[i][0], pairs[i][1], double(ct)});
     }
-    
-    display(frequecy);          
-    
+
+    for (size_t i = 0; i < fre.size() - 1; ++i)
+        for (size_t j = 0; j < fre.size() - i - 1; ++j)
+            if (fre[j].ct < fre[j + 1].ct) swap(fre[j], fre[j + 1]);
+
+    for (size_t i = 0; i < fre.size(); ++i) cout << fre[i].token1 << " " << fre[i].token2 << " " << fre[i].ct << endl;
     return 0;
 }
 
