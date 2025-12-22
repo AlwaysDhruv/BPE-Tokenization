@@ -64,18 +64,6 @@ int main()
     
     cout << "Most Frequent Pair" << endl;
 
-    for (size_t i = 0; i < pairs.size(); ++i)
-    {
-        if (pairs[i][0]==fre[0].token1 && pairs[i][1]==fre[0].token2)
-        {
-            erase(pairs[i], fre[0].token1);
-            erase(pairs[i], fre[0].token2);
-            pairs[i].insert(pairs[i].begin() + i, (fre[0].token1 * 100) + fre[0].token2);
-            erase(pairs[i + 1], fre[0].token2);
-            pairs[i + 1].insert(pairs[i + 1].begin() + (i + 1), pairs[i + 1][1]);
-        }
-    }
-
     display(pairs);
     
     return 0;
