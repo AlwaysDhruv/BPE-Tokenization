@@ -8,91 +8,32 @@
 using namespace std;
 using json = nlohmann::json;
 
+char token_to_char(unordered_map<char, double>&, double);
 void fetch_json_data(unordered_map<char, double>&, string);
 int tokens_to_pairs(vector<double>&,vector<vector<double>>&);
-int fetch_text_data_to_tokens(unordered_map<char, double>&, vector<double>&, string);
 template <typename vectr> void display(vector<vector<vectr>>&);
 template <typename vectrr> void displayy(vector<vector<vectrr>>&);
-char token_to_char(unordered_map<char, double>&, double);
+int fetch_text_data_to_tokens(unordered_map<char, double>&, vector<double>&, string);
+void pairs_to_most_frequent_merge(vector<vector<double>>&, unordered_map<char, double>&);
 
 struct Frequency
 {
-    double token1, token2, merge, ct;
+    double token1, token2, merge, ct = 0;
 };
 
 int main()
 {
     unordered_map<char, double> vocab;
     fetch_json_data(vocab, "vocab.json");
-    
-    cout << "Data Fetched From Json " << endl;
 
     vector<double> tokens;
     fetch_text_data_to_tokens(vocab, tokens, "test.txt");
 
-    cout << "Data Converts Into Tokens " << endl;
+    vector<vector<double>> pair;
+    tokens_to_pairs(tokens, pair);
 
-    vector<vector<double>> pairs;
-    tokens_to_pairs(tokens, pairs);
+    pairs_to_most_frequent_merge(pair, vocab);
 
-    cout << "Tokens Converts Into Pairs " << endl;
-
-    bool isthat[pairs.size()] = {false};
-
-    vector<Frequency> fre;    
-
-    for (size_t i = 0; i < pairs.size(); ++i)
-    {
-        if (isthat[i]) continue;
-        int ct = 1;
-        for (size_t j = i + 1; j < pairs.size(); ++j)
-        {
-            if (pairs[i][0]==pairs[j][0] && pairs[i][1]==pairs[j][1])
-            {
-                isthat[j] = true;
-                ++ct;
-            }
-        }
-        fre.push_back({pairs[i][0], pairs[i][1], double(ct)});
-    }
-
-    cout << "Pairs Frequency Calculated" << endl;
-
-    for (size_t i = 0; i < fre.size() - 1; ++i)
-        for (size_t j = 0; j < fre.size() - i - 1; ++j)
-            if (fre[j].ct < fre[j + 1].ct) swap(fre[j], fre[j + 1]);
-
-    for (size_t i = 0; i < pairs.size(); ++i)
-    {
-        if (pairs[i][0]==fre[0].token1 && pairs[i][1]==fre[0].token2)
-        {
-            erase(pairs[i], fre[0].token1);
-            erase(pairs[i], fre[0].token2);
-            pairs[i].insert(pairs[i].begin(), (fre[0].token1 * 100) + fre[0].token2);
-            if (i==0)
-            {
-                erase(pairs[i], (fre[0].token1 * 100) + fre[0].token2);
-                erase(pairs[i + 1], fre[0].token2);
-                pairs[i + 1].insert(pairs[i + 1].begin(), (fre[0].token1 * 100) + fre[0].token2);
-            }
-            else if(i == (pairs.size() - 1))
-            {
-                erase(pairs[i], (fre[0].token1 * 100) + fre[0].token2);
-                erase(pairs[i - 1], fre[0].token1);
-                pairs[i - 1].insert(pairs[i - 1].begin(), (fre[0].token1 * 100) + fre[0].token2);                
-            }
-            else
-            {
-                erase(pairs[i], (fre[0].token1 * 100) + fre[0].token2);
-                erase(pairs[i - 1], fre[0].token1);
-                erase(pairs[i + 1], fre[0].token2);
-                pairs[i - 1].insert(pairs[i - 1].end(), (fre[0].token1 * 100) + fre[0].token2);
-                pairs[i + 1].insert(pairs[i + 1].begin(), (fre[0].token1 * 100) + fre[0].token2);
-            }
-        }
-    }
-
-    display(pairs);
     return 0;
 }
 
@@ -110,6 +51,7 @@ void fetch_json_data(unordered_map<char, double>& vcb, string path)
             if (key.size() == 1)
                 vcb[key[0]] = values.get<double>();
         }
+        cout << path << " Data Fetched Sucessfully.." << endl;
     }
 }
 
@@ -125,6 +67,7 @@ int fetch_text_data_to_tokens(unordered_map<char, double>& vcb, vector<double>& 
             for (int i = 0; i < line.size(); ++i) tk.push_back(vcb[line[i]]);
             line.clear();
         }
+        cout << "Text Converts To Tokens From " << path << " Sucessfully..." << endl;
     }
     return tk.size();
 }
@@ -148,6 +91,7 @@ int tokens_to_pairs(vector<double>& tokens ,vector<vector<double>>& pairs)
             ++ct;
         }
     }
+    cout << pairs.size() << " Pairs Created Sucessfully..." << endl;
     return pairs.size();
 }
 
@@ -186,4 +130,97 @@ char token_to_char(unordered_map<char, double>& vcb, double tk)
         }
     }
     return ch;
+}
+
+void pairs_to_most_frequent_merge(vector<vector<double>>& pairs, unordered_map<char, double>& vcb)
+{
+    bool isthat[pairs.size()] = {false};
+
+    vector<Frequency> fre;    
+
+    for (size_t i = 0; i < pairs.size(); ++i)
+    {
+        if (isthat[i]) continue;
+        double ct = 1;
+        for (size_t j = i + 1; j < pairs.size(); ++j)
+        {
+            if (pairs[i][0]==pairs[j][0] && pairs[i][1]==pairs[j][1])
+            {
+                isthat[j] = true;
+                ++ct;
+            }
+        }
+        fre.push_back({pairs[i][0], pairs[i][1], ct});
+    }
+
+
+    for (size_t i = 0; i < fre.size() - 1; ++i)
+        for (size_t j = 0; j < fre.size() - i - 1; ++j)
+            if (fre[j].ct < fre[j + 1].ct) swap(fre[j], fre[j + 1]);
+
+    long long mul = 1;
+    long long num = fre[0].token2;
+    
+    while(num > 0)
+    {
+        num /= 10;
+        mul *= 10;
+    }
+    
+    fre[0].merge = (fre[0].token1 * mul) + fre[0].token2;
+
+    cout << "Most Frequent : "<< fre[0].token1 << " & " << fre[0].token2 << " => "<< fre[0].merge << endl << endl; 
+
+    for (size_t i = 0; i < pairs.size(); ++i)
+    {
+        if (pairs[i][0]==fre[0].token1 && pairs[i][1]==fre[0].token2)
+        {
+            erase(pairs[i], fre[0].token1);
+            erase(pairs[i], fre[0].token2);
+            pairs[i].insert(pairs[i].begin(), fre[0].merge);
+            if (i==0)
+            {
+                erase(pairs[i], fre[0].merge);
+                erase(pairs[i + 1], fre[0].token2);
+                pairs[i + 1].insert(pairs[i + 1].begin(), fre[0].merge);
+            }
+            else if(i == (pairs.size() - 1))
+            {
+                erase(pairs[i], fre[0].merge);
+                erase(pairs[i - 1], fre[0].token1);
+                pairs[i - 1].insert(pairs[i - 1].begin(), fre[0].merge);                
+            }
+            else
+            {
+                erase(pairs[i], fre[0].merge);
+                erase(pairs[i - 1], fre[0].token1);
+                erase(pairs[i + 1], fre[0].token2);
+                pairs[i - 1].insert(pairs[i - 1].end(), fre[0].merge);
+                pairs[i + 1].insert(pairs[i + 1].begin(), fre[0].merge);
+            }
+        }
+    }
+    
+    for (int i = 0; i < pairs.size(); ++i) if (pairs[i].empty()) pairs.erase(pairs.begin() + i);
+    
+    ofstream file("merges.txt", std::ios::app);
+    
+    for (const auto& pair : vcb)
+    {
+        if (pair.second==fre[0].token1)
+        {
+            file << pair.first << " ";
+            break;
+        }
+    }
+
+    for (const auto& pair : vcb)
+    {
+        if (pair.second==fre[0].token2)
+        {
+            file << pair.first << endl;
+            break;
+        }
+    }
+    file.close();
 }
