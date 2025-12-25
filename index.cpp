@@ -3,33 +3,37 @@
 #include <vector>
 #include <unordered_map>
 #include <algorithm>
+#include <filesystem>
 #include "json.hpp"
 
 using namespace std;
 using json = nlohmann::json;
+namespace fs = std::filesystem;
 using ordered_json = nlohmann::ordered_json;
-char token_to_char(unordered_map<char, long long>&, double);
-int tokens_to_pairs(vector<double>&,vector<vector<double>>&);
-void fetch_json_data(unordered_map<char, long long>&, string);
+
+string byte_to_key(unsigned char);
+char token_to_char(unordered_map<unsigned char, long long>&, long long);
+int tokens_to_pairs(vector<long long>&,vector<vector<long long>>&);
+void fetch_json_data(unordered_map<unsigned char, long long>&);
 template <typename vectr> void display(vector<vector<vectr>>&);
 template <typename empty> void remove_empty(vector<vector<empty>>&);
-int fetch_text_data_to_tokens(unordered_map<char, long long>&, vector<double>&, string);
-void pairs_to_most_frequent_merge(vector<vector<double>>&, unordered_map<char, long long>&);
+int fetch_text_data_to_tokens(unordered_map<unsigned char, long long>&, vector<long long>&, string);
+void pairs_to_most_frequent_merge(vector<vector<long long>>&, unordered_map<unsigned char, long long>&);
 
 struct Frequency
 {
-    double token1, token2, merge, ct = 0;
+    long long token1, token2, merge, ct = 0;
 };
 
 int main()
 {
-    unordered_map<char, long long> vocab;
-    fetch_json_data(vocab, "vocab.json");
+    unordered_map<unsigned char, long long> vocab;
+    fetch_json_data(vocab);
 
-    vector<double> tokens;
+    vector<long long> tokens;
     fetch_text_data_to_tokens(vocab, tokens, "test.txt");
 
-    vector<vector<double>> pair;
+    vector<vector<long long>> pair;
     tokens_to_pairs(tokens, pair);
 
     pairs_to_most_frequent_merge(pair, vocab);
@@ -37,10 +41,41 @@ int main()
     return 0;
 }
 
-void fetch_json_data(unordered_map<char, long long>& vcb, string path)
+void fetch_json_data(unordered_map<unsigned char, long long>& vcb)
 {
-    ifstream file(path);
-    if (!file.is_open()) cout << path << " Can Not Open " << endl;
+    ifstream file("vocab.json");
+    if (!fs::exists("vocab.json"))
+    {
+        ordered_json vocab = ordered_json::object();
+    
+        for (int i = 0; i <= 255; ++i)
+        {
+            unsigned char b = static_cast<unsigned char>(i);
+            string key = byte_to_key(b);
+    
+            vocab[key] = static_cast<long long>(i);
+        }
+    
+        std::ofstream out("vocab.json");
+        out << vocab.dump(4);
+        out.close();
+
+        cout << "vocab.json Created Sucessfully..." << endl;
+
+        json data;
+        file >> data;
+
+        file.close();
+
+        for(auto& [key, values] : data.items())
+        {
+            if (key.size() == 1)
+                vcb[key[0]] = values.get<long long>();
+        }
+
+        cout << "Data Fetched Sucessfully.." << endl;
+
+    }
     else
     {
         json data;
@@ -49,13 +84,14 @@ void fetch_json_data(unordered_map<char, long long>& vcb, string path)
         for(auto& [key, values] : data.items())
         {
             if (key.size() == 1)
-                vcb[key[0]] = values.get<double>();
+                vcb[key[0]] = values.get<long long>();
         }
-        cout << path << " Data Fetched Sucessfully.." << endl;
+
+        cout << "Data Fetched Sucessfully.." << endl;
     }
 }
 
-int fetch_text_data_to_tokens(unordered_map<char, long long>& vcb, vector<double>& tk, string path)
+int fetch_text_data_to_tokens(unordered_map<unsigned char, long long>& vcb, vector<long long>& tk, string path)
 {
     ifstream file(path);
     if (!file.is_open()) cout << path << " Can Not Open " << endl;
@@ -72,10 +108,10 @@ int fetch_text_data_to_tokens(unordered_map<char, long long>& vcb, vector<double
     return tk.size();
 }
 
-int tokens_to_pairs(vector<double>& tokens ,vector<vector<double>>& pairs)
+int tokens_to_pairs(vector<long long>& tokens ,vector<vector<long long>>& pairs)
 {
     int ct = 0;
-    vector<double> pair;
+    vector<long long> pair;
     for (int i = 0; i < tokens.size(); ++i)
     {
         if (ct==2)
@@ -109,7 +145,7 @@ template <typename empty> void remove_empty(vector<vector<empty>>& vectr)
     for (size_t i = 0; i < vectr.size(); ++i) if (vectr[i].empty()) vectr.erase(vectr.begin() + i);
 }
 
-char token_to_char(unordered_map<char, long long>& vcb, double tk)
+char token_to_char(unordered_map<unsigned char, long long>& vcb, long long tk)
 {
     char ch;
     for (const auto& pair : vcb)
@@ -123,7 +159,7 @@ char token_to_char(unordered_map<char, long long>& vcb, double tk)
     return ch;
 }
 
-void pairs_to_most_frequent_merge(vector<vector<double>>& pairs, unordered_map<char, long long>& vcb)
+void pairs_to_most_frequent_merge(vector<vector<long long>>& pairs, unordered_map<unsigned char, long long>& vcb)
 {
     
     bool isthat[pairs.size()] = {false};
@@ -133,7 +169,7 @@ void pairs_to_most_frequent_merge(vector<vector<double>>& pairs, unordered_map<c
     for (size_t i = 0; i < pairs.size(); ++i)
     {
         if (isthat[i]) continue;
-        double ct = 1;
+        long long ct = 1;
         for (size_t j = i + 1; j < pairs.size(); ++j)
         {
             if (pairs[i][0]==pairs[j][0] && pairs[i][1]==pairs[j][1])
@@ -229,4 +265,19 @@ void pairs_to_most_frequent_merge(vector<vector<double>>& pairs, unordered_map<c
         out << data.dump(4);
         out.close();
     }
+}
+
+string byte_to_key(unsigned char b)
+{
+    if (b >= 32 && b <= 126 && b != '"' && b != '\\')
+    {
+        return string(1, static_cast<char>(b));
+    }
+
+    ostringstream oss;
+    oss << "\\u"
+        << std::hex << std::setw(4) << std::setfill('0')
+        << static_cast<int>(b);
+
+    return oss.str();
 }
