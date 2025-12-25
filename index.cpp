@@ -35,10 +35,44 @@ int main()
 
     vector<vector<long long>> pair;
     tokens_to_pairs(tokens, pair);
+    
+    display(pair);
 
     pairs_to_most_frequent_merge(pair, vocab);
 
+    display(pair);
+
     return 0;
+}
+
+template <typename empty> void remove_empty(vector<vector<empty>>& vectr)
+{
+    for (size_t i = 0; i < vectr.size(); ++i) if (vectr[i].empty()) vectr.erase(vectr.begin() + i);
+}
+
+template <typename vectr> void display(vector<vector<vectr>>& vec)
+{
+    for (auto& values : vec)
+    {
+        for (auto& value : values) cout << value << " ";
+        cout << endl;
+    }
+}
+
+
+string byte_to_key(unsigned char b)
+{
+    if (b >= 32 && b <= 126 && b != '"' && b != '\\')
+    {
+        return string(1, static_cast<char>(b));
+    }
+
+    ostringstream oss;
+    oss << "\\u"
+        << std::hex << std::setw(4) << std::setfill('0')
+        << static_cast<int>(b);
+
+    return oss.str();
 }
 
 void fetch_json_data(unordered_map<unsigned char, long long>& vcb)
@@ -132,20 +166,6 @@ int tokens_to_pairs(vector<long long>& tokens ,vector<vector<long long>>& pairs)
     return pairs.size();
 }
 
-template <typename vectr> void display(vector<vector<vectr>>& vec)
-{
-    for (auto& values : vec)
-    {
-        for (auto& value : values) cout << value << " ";
-        cout << endl;
-    }
-}
-
-template <typename empty> void remove_empty(vector<vector<empty>>& vectr)
-{
-    for (size_t i = 0; i < vectr.size(); ++i) if (vectr[i].empty()) vectr.erase(vectr.begin() + i);
-}
-
 char token_to_char(unordered_map<unsigned char, long long>& vcb, long long tk)
 {
     char ch;
@@ -164,7 +184,7 @@ void pairs_to_most_frequent_merge(vector<vector<long long>>& pairs, unordered_ma
 {
     
     bool isthat[pairs.size()] = {false};
-
+    
     vector<Frequency> fre;    
 
     for (size_t i = 0; i < pairs.size(); ++i)
@@ -266,19 +286,4 @@ void pairs_to_most_frequent_merge(vector<vector<long long>>& pairs, unordered_ma
             }    
         }
     }
-}
-
-string byte_to_key(unsigned char b)
-{
-    if (b >= 32 && b <= 126 && b != '"' && b != '\\')
-    {
-        return string(1, static_cast<char>(b));
-    }
-
-    ostringstream oss;
-    oss << "\\u"
-        << std::hex << std::setw(4) << std::setfill('0')
-        << static_cast<int>(b);
-
-    return oss.str();
 }
