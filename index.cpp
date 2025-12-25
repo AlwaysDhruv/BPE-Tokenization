@@ -10,10 +10,9 @@ using json = nlohmann::json;
 using ordered_json = nlohmann::ordered_json;
 
 char token_to_char(unordered_map<char, long long>&, double);
-void fetch_json_data(unordered_map<char, long long>&, string);
 int tokens_to_pairs(vector<double>&,vector<vector<double>>&);
+void fetch_json_data(unordered_map<char, long long>&, string);
 template <typename vectr> void display(vector<vector<vectr>>&);
-template <typename vectrr> void displayy(vector<vector<vectrr>>&);
 int fetch_text_data_to_tokens(unordered_map<char, long long>&, vector<double>&, string);
 void pairs_to_most_frequent_merge(vector<vector<double>>&, unordered_map<char, long long>&);
 
@@ -105,20 +104,6 @@ template <typename vectr> void display(vector<vector<vectr>>& vec)
     }
 }
 
-template <typename vectrr> void displayy(vector<vector<vectrr>>& vec)
-{
-    for (auto& values : vec)
-    {
-        for (auto& value : values)
-        {    
-            for (auto& val : value)
-                cout << val << " ";
-            cout << endl;
-        }
-        cout << endl;
-    }
-}
-
 char token_to_char(unordered_map<char, long long>& vcb, double tk)
 {
     char ch;
@@ -135,6 +120,7 @@ char token_to_char(unordered_map<char, long long>& vcb, double tk)
 
 void pairs_to_most_frequent_merge(vector<vector<double>>& pairs, unordered_map<char, long long>& vcb)
 {
+    
     bool isthat[pairs.size()] = {false};
 
     vector<Frequency> fre;    
@@ -204,16 +190,16 @@ void pairs_to_most_frequent_merge(vector<vector<double>>& pairs, unordered_map<c
     
     for (int i = 0; i < pairs.size(); ++i) if (pairs[i].empty()) pairs.erase(pairs.begin() + i);
     
+    string tk;
     ofstream merges_file("merges.txt", std::ios::app);
     
     if(!merges_file.is_open()) cout << "Can not open or create merges.txt " << endl;
     else
     {
-        string tk;
         char tk1 = token_to_char(vcb, fre[0].token1);
         char tk2 = token_to_char(vcb, fre[0].token2);
         
-        file << tk1 << " " << tk2 << endl;
+        merges_file << tk1 << " " << tk2 << endl;
             
         tk.push_back(tk1);
         tk.push_back(tk2);
