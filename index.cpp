@@ -155,8 +155,14 @@ void pairs_to_most_frequent_merge(vector<vector<double>>& pairs, unordered_map<c
     }
     
     fre[0].merge = (fre[0].token1 * mul) + fre[0].token2;
+    
+    string tk;
+    char tk1 = token_to_char(vcb, fre[0].token1);
+    char tk2 = token_to_char(vcb, fre[0].token2);
+    tk.push_back(tk1);
+    tk.push_back(tk2);        
 
-    cout << "Most Frequent : "<< fre[0].token1 << " & " << fre[0].token2 << " => "<< fre[0].merge << endl << endl; 
+    cout << "Most Frequent : "<< tk1 << " & " << tk2 << " => "<< tk << endl << endl; 
 
     for (size_t i = 0; i < pairs.size(); ++i)
     {
@@ -189,21 +195,13 @@ void pairs_to_most_frequent_merge(vector<vector<double>>& pairs, unordered_map<c
     }
     
     for (int i = 0; i < pairs.size(); ++i) if (pairs[i].empty()) pairs.erase(pairs.begin() + i);
-    
-    string tk;
+
     ofstream merges_file("merges.txt", std::ios::app);
     
     if(!merges_file.is_open()) cout << "Can not open or create merges.txt " << endl;
     else
-    {
-        char tk1 = token_to_char(vcb, fre[0].token1);
-        char tk2 = token_to_char(vcb, fre[0].token2);
-        
-        merges_file << tk1 << " " << tk2 << endl;
-            
-        tk.push_back(tk1);
-        tk.push_back(tk2);
-        
+    {        
+        merges_file << tk1 << " " << tk2 << endl;            
         merges_file.close();
     }
 
