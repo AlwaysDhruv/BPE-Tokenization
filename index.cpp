@@ -22,7 +22,7 @@ void pairs_to_most_frequent_merge(vector<vector<long long>>&, unordered_map<unsi
 
 struct Frequency
 {
-    long long token1, token2, merge, ct = 0;
+    long long token1, token2, ct, merge;
 };
 
 int main()
@@ -36,11 +36,7 @@ int main()
     vector<vector<long long>> pair;
     tokens_to_pairs(tokens, pair);
     
-    display(pair);
-
     pairs_to_most_frequent_merge(pair, vocab);
-
-    display(pair);
 
     return 0;
 }
@@ -182,7 +178,6 @@ char token_to_char(unordered_map<unsigned char, long long>& vcb, long long tk)
 
 void pairs_to_most_frequent_merge(vector<vector<long long>>& pairs, unordered_map<unsigned char, long long>& vcb)
 {
-    
     bool isthat[pairs.size()] = {false};
     
     vector<Frequency> fre;    
@@ -201,7 +196,6 @@ void pairs_to_most_frequent_merge(vector<vector<long long>>& pairs, unordered_ma
         }
         fre.push_back({pairs[i][0], pairs[i][1], ct});
     }
-
 
     for (size_t i = 0; i < fre.size() - 1; ++i)
         for (size_t j = 0; j < fre.size() - i - 1; ++j)
