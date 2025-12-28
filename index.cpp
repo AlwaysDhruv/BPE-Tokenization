@@ -11,16 +11,16 @@ using json = nlohmann::json;
 namespace fs = std::filesystem;
 using ordered_json = nlohmann::ordered_json;
 
-static unordered_map<long long, string> most;
+static unordered_map<string, long long> most;
 
 string byte_to_key(unsigned char);
-char token_to_char(unordered_map<unsigned char, long long>&, long long);
+string token_to_char(unordered_map<string, long long>&, long long);
 int tokens_to_pairs(vector<long long>&,vector<vector<long long>>&);
-void fetch_json_data(unordered_map<unsigned char, long long>&);
+void fetch_json_data(unordered_map<string, long long>&);
 template <typename vectr> void display(vector<vector<vectr>>&);
 template <typename empty> void remove_empty(vector<vector<empty>>&);
-int fetch_text_data_to_tokens(unordered_map<unsigned char, long long>&, vector<long long>&, string);
-void pairs_to_most_frequent_merge(vector<vector<long long>>&, unordered_map<unsigned char, long long>&);
+int fetch_text_data_to_tokens(unordered_map<string, long long>&, vector<long long>&, string);
+void pairs_to_most_frequent_merge(vector<vector<long long>>&, unordered_map<string, long long>&);
 
 struct Frequency
 {
@@ -29,7 +29,7 @@ struct Frequency
 
 int main()
 {
-    unordered_map<unsigned char, long long> vocab;
+    unordered_map<string , long long> vocab;
     fetch_json_data(vocab);
 
     vector<long long> tokens;
@@ -37,8 +37,9 @@ int main()
 
     vector<vector<long long>> pair;
     tokens_to_pairs(tokens, pair);
-    
-    pairs_to_most_frequent_merge(pair, vocab);
+    display(pair);  
+
+//    pairs_to_most_frequent_merge(pair, vocab);
 
     return 0;
 }
@@ -58,22 +59,28 @@ template <typename vectr> void display(vector<vector<vectr>>& vec)
 }
 
 
-string byte_to_key(unsigned char b)
+std::string byte_to_key(unsigned char b)
 {
+    // ASCII printable and safe
     if (b >= 32 && b <= 126 && b != '"' && b != '\\')
     {
-        return string(1, static_cast<char>(b));
+        return std::string(1, static_cast<char>(b));
     }
 
-    ostringstream oss;
-    oss << "\\u"
-        << std::hex << std::setw(4) << std::setfill('0')
-        << static_cast<int>(b);
+    // Encode byte as UTF-8
+    if (b < 128)
+    {
+        return std::string(1, static_cast<char>(b));
+    }
 
-    return oss.str();
+    // U+0080 to U+00FF → 2-byte UTF-8
+    char first  = static_cast<char>(0xC0 | (b >> 6));
+    char second = static_cast<char>(0x80 | (b & 0x3F));
+
+    return std::string{first, second};
 }
 
-void fetch_json_data(unordered_map<unsigned char, long long>& vcb)
+void fetch_json_data(unordered_map<string, long long>& vcb)
 {
     if (!fs::exists("vocab.json"))
     {
@@ -94,15 +101,14 @@ void fetch_json_data(unordered_map<unsigned char, long long>& vcb)
         cout << "vocab.json Created Sucessfully..." << endl;
 
         ifstream file("vocab.json");
-        json data;
+        ordered_json data;
         file >> data;
 
         file.close();
 
         for(auto& [key, values] : data.items())
         {
-            if (key.size() == 1)
-                vcb[key[0]] = values.get<long long>();
+            vcb[key] = values.get<long long>();
         }
 
         cout << "Data Fetched Sucessfully.." << endl;
@@ -111,30 +117,33 @@ void fetch_json_data(unordered_map<unsigned char, long long>& vcb)
     else
     {
         ifstream file("vocab.json");
-        json data;
+        ordered_json data;
         file >> data;
         file.close();
         for(auto& [key, values] : data.items())
         {
-            if (key.size() == 1)
-                vcb[key[0]] = values.get<long long>();
+            vcb[key] = values.get<long long>();
         }
 
         cout << "Data Fetched Sucessfully.." << endl;
     }
 }
 
-int fetch_text_data_to_tokens(unordered_map<unsigned char, long long>& vcb, vector<long long>& tk, string path)
+int fetch_text_data_to_tokens(unordered_map<string, long long>& vcb, vector<long long>& tk, string path)
 {
     ifstream file(path);
     if (!file.is_open()) cout << path << " Can Not Open " << endl;
     else
     {
-        string line;
-        while(getline(file, line))
+        unsigned char byte;
+        while (file.read(reinterpret_cast<char*>(&byte), 1))
         {
-            for (int i = 0; i < line.size(); ++i) tk.push_back(vcb[line[i]]);
-            line.clear();
+            string key = byte_to_key(byte);
+            auto it = vcb.find(key);
+            
+            if (it == vcb.end())
+                throw std::runtime_error("Byte not found in vocab");
+            tk.push_back(it->second);
         }
         cout << "Text Converts To Tokens From " << path << " Sucessfully..." << endl;
     }
@@ -164,9 +173,9 @@ int tokens_to_pairs(vector<long long>& tokens ,vector<vector<long long>>& pairs)
     return pairs.size();
 }
 
-char token_to_char(unordered_map<unsigned char, long long>& vcb, long long tk)
+string token_to_char(unordered_map<string, long long>& vcb, long long tk)
 {
-    char ch;
+    string ch;
     bool test = false;
     for (const auto& pair : vcb)
     {
@@ -181,10 +190,9 @@ char token_to_char(unordered_map<unsigned char, long long>& vcb, long long tk)
     {
         for (const auto& pair : most)
         {
-            if (pair.first==tk)
+            if (pair.second==tk)
             {
-                cout << pair.first << " " << pair.second << endl;
-                ch = pair.second;
+                ch = pair.first;
                 test = true;
                 break;
             }
@@ -193,14 +201,11 @@ char token_to_char(unordered_map<unsigned char, long long>& vcb, long long tk)
     return ch;
 }
 
-void pairs_to_most_frequent_merge(vector<vector<long long>>& pairs, unordered_map<unsigned char, long long>& vcb)
+void pairs_to_most_frequent_merge(vector<vector<long long>>& pairs, unordered_map<string, long long>& vcb)
 {
     for (int i = 0; i < 3; ++i)
     {
-        display(pairs);
-        cout << endl << endl;
-
-        if (pairs.size()!=1)
+        if (pairs.size() > 1)
         {
             bool isthat[pairs.size()] = {false};
             
@@ -235,13 +240,10 @@ void pairs_to_most_frequent_merge(vector<vector<long long>>& pairs, unordered_ma
             }
             
             fre[0].merge = (fre[0].token1 * mul) + fre[0].token2;
-            cout << fre[0].token1 << " " << fre[0].token2 << endl;
-
-            string tk;
-            char tk1 = token_to_char(vcb, fre[0].token1);
-            char tk2 = token_to_char(vcb, fre[0].token2);
-            tk.push_back(tk1);
-            tk.push_back(tk2);        
+            
+            string tk1 = token_to_char(vcb, fre[0].token1);
+            string tk2 = token_to_char(vcb, fre[0].token2);
+            string tk = tk1 + tk2;
         
             cout << "Most Frequent : "<< tk1 << " & " << tk2 << " => "<< tk << endl << endl; 
         
@@ -290,8 +292,8 @@ void pairs_to_most_frequent_merge(vector<vector<long long>>& pairs, unordered_ma
                     long long max_id = -1;
                     for (auto& [k, v] : data.items()) max_id = std::max(max_id, v.get<long long>());
                     data[tk] = max_id + 1;
-                    
-                    most[fre[0].merge] = tk;
+        
+                    most[tk] = fre[0].merge;
         
                     std::ofstream out("vocab.json");
                     out << data.dump(4);
