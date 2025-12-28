@@ -37,9 +37,8 @@ int main()
 
     vector<vector<long long>> pair;
     tokens_to_pairs(tokens, pair);
-    display(pair);  
 
-//    pairs_to_most_frequent_merge(pair, vocab);
+    pairs_to_most_frequent_merge(pair, vocab);
 
     return 0;
 }
