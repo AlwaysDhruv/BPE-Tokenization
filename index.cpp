@@ -37,12 +37,8 @@ int main()
 
     vector<vector<long long>> pair;
     tokens_to_pairs(tokens, pair);
-
-    cout << endl << endl;
     
-    display(pair);
-    
-    //pairs_to_most_frequent_merge(pair, vocab);
+    pairs_to_most_frequent_merge(pair, vocab);
 
     return 0;
 }
@@ -210,8 +206,11 @@ string token_to_char(unordered_map<string, long long>& vcb, long long tk)
 
 void pairs_to_most_frequent_merge(vector<vector<long long>>& pairs, unordered_map<string, long long>& vcb)
 {
-    for (int i = 0; i < 3; ++i)
+    for (int i = 0; i < 4; ++i)
     {
+        display(pairs);
+        cout << endl << endl;
+
         if (pairs.size() > 1)
         {
             bool isthat[pairs.size()] = {false};
