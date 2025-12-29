@@ -149,18 +149,18 @@ int tokens_to_pairs(vector<long long>& tokens ,vector<vector<long long>>& pairs)
         if (i!=(tokens.size() - 1))
         {
             
-        if (ct==2)
-        {
-            pairs.push_back(pair);
-            pair.clear();
-            ct = 0;
-            i-=2;
-        }
-        else
-        {
-            pair.push_back(tokens[i]);
-            ++ct;
-        }
+            if (ct==2)
+            {
+                pairs.push_back(pair);
+                pair.clear();
+                ct = 0;
+                i-=2;
+            }
+            else
+            {
+                pair.push_back(tokens[i]);
+                ++ct;
+            }
         }
         else
         {
