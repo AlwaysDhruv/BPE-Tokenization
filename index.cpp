@@ -33,11 +33,11 @@ int main()
     fetch_json_data(vocab);
 
     vector<long long> tokens;
-    fetch_text_data_to_tokens(vocab, tokens, "test.txt");
+    fetch_text_data_to_tokens(vocab, tokens, "test2.txt");
 
     vector<vector<long long>> pair;
     tokens_to_pairs(tokens, pair);
-    
+
     pairs_to_most_frequent_merge(pair, vocab, 4);
 
     return 0;
@@ -45,7 +45,8 @@ int main()
 
 template <typename empty> void remove_empty(vector<vector<empty>>& vectr)
 {
-    for (size_t i = 0; i < vectr.size(); ++i) if (vectr[i].empty()) vectr.erase(vectr.begin() + i);
+    for (size_t i = 0; i < vectr.size(); ++i)
+        if (vectr[i].empty()) vectr.erase(vectr.begin() + i);
 }
 
 template <typename vectr> void display(vector<vector<vectr>>& vec)
@@ -184,9 +185,18 @@ string token_to_char(unordered_map<string, long long>& vcb, long long tk)
     {
         if (pair.second==tk)
         {
-            ch = pair.first;
-            test = true;
-            break;
+            if (pair.second==32)
+            {
+                ch = "Ġ";
+                test = true;
+                break;                
+            }
+            else
+            {
+                ch = pair.first;
+                test = true;
+                break;
+            }
         }
     }
     if (test==false)
@@ -195,9 +205,18 @@ string token_to_char(unordered_map<string, long long>& vcb, long long tk)
         {
             if (pair.second==tk)
             {
-                ch = pair.first;
-                test = true;
-                break;
+                if (pair.second==32)
+                {
+                    ch = "Ġ";
+                    test = true;
+                    break;                
+                }
+                else
+                {
+                    ch = pair.first;
+                    test = true;
+                    break;
+                }
             }
         }
     }
@@ -270,36 +289,39 @@ void pairs_to_most_frequent_merge(vector<vector<long long>>& pairs, unordered_ma
         
             cout << "Most Frequent : "<< tk1 << " & " << tk2 << " => "<< tk << endl << endl; 
         
-            for (size_t i = 0; i < pairs.size(); ++i)
+            if (pairs.size() != 1)
             {
-                if (pairs[i][0]==fre[0].token1 && pairs[i][1]==fre[0].token2)
+                for (size_t i = 0; i < pairs.size(); ++i)
                 {
-                    erase(pairs[i], fre[0].token1);
-                    erase(pairs[i], fre[0].token2);
-                    pairs[i].insert(pairs[i].begin(), fre[0].merge);
-                    if (i==0)
+                    if (pairs[i][0]==fre[0].token1 && pairs[i][1]==fre[0].token2)
                     {
-                        erase(pairs[i], fre[0].merge);
-                        auto it = find(pairs[i + 1].begin(), pairs[i + 1].end(), fre[0].token2);
-                        if (it != pairs[i + 1].end()) pairs[i + 1].erase(it);
-                        pairs[i + 1].insert(pairs[i + 1].begin(), fre[0].merge);
-                    }
-                    else if(i == (pairs.size() - 1))
-                    {
-                        erase(pairs[i], fre[0].merge);
-                        erase(pairs[i - 1], fre[0].token1);
-                        pairs[i - 1].insert(pairs[i - 1].begin(), fre[0].merge);                
-                    }
-                    else
-                    {
-                        erase(pairs[i], fre[0].merge);
-                        erase(pairs[i - 1], fre[0].token1);
-                        erase(pairs[i + 1], fre[0].token2);
-                        pairs[i - 1].insert(pairs[i - 1].end(), fre[0].merge);
-                        pairs[i + 1].insert(pairs[i + 1].begin(), fre[0].merge);
+                        erase(pairs[i], fre[0].token1);
+                        erase(pairs[i], fre[0].token2);
+                        pairs[i].insert(pairs[i].begin(), fre[0].merge);
+                        if (i==0)
+                        {
+                            erase(pairs[i], fre[0].merge);
+                            auto it = find(pairs[i + 1].begin(), pairs[i + 1].end(), fre[0].token2);
+                            if (it != pairs[i + 1].end()) pairs[i + 1].erase(it);
+                            pairs[i + 1].insert(pairs[i + 1].begin(), fre[0].merge);
+                        }
+                        else if(i == (pairs.size() - 1))
+                        {
+                            erase(pairs[i], fre[0].merge);
+                            erase(pairs[i - 1], fre[0].token1);
+                            pairs[i - 1].insert(pairs[i - 1].begin(), fre[0].merge);
+                        }
+                        else
+                        {
+                            erase(pairs[i], fre[0].merge);
+                            erase(pairs[i - 1], fre[0].token1);
+                            erase(pairs[i + 1], fre[0].token2);
+                            pairs[i - 1].insert(pairs[i - 1].end(), fre[0].merge);
+                            pairs[i + 1].insert(pairs[i + 1].begin(), fre[0].merge);
+                        }
                     }
                 }
+                remove_empty(pairs);
             }
-            remove_empty(pairs);
     }
 }
