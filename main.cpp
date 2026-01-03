@@ -13,6 +13,7 @@ using ordered_json = nlohmann::ordered_json;
 
 static unordered_map<string, long long> most;
 
+int space_index(string);
 string byte_to_key(unsigned char);
 void preprocess_to_pairs(vector<vector<long long>>&);
 void fetch_json_data(unordered_map<string, long long>&);
@@ -56,22 +57,36 @@ int main()
     tokens_to_pairs(chars, pair);
 
     line.clear();
-    
+    chars.clear();
+
     vector<vector<string>> merges;
     ifstream merge("merges.txt");
 
     while(getline(merge, line))
     {
-        vector<string> cha;
         for (size_t i = 0; i < pair.size(); ++i)
             if (string(1, line[0])==pair[i][0])
             {
-                for (size_t j = 0; j < line.size(); ++j)
-                    if (line[j]!=' ')
-                        cha.push_back(line[j]);
+                string cha;
+                auto index = space_index(line);
+                cout << index << endl << endl;
+                for (size_t j = 0; j < index; ++j)
+                {
+                    cha += line[j];
+                }
+                
+                chars.push_back(cha);
+                cha.clear();
+                
+                for (size_t j = index + 1; j > line.size() - 1; --j)
+                {
+                    cha += line[j];
+                }
+                chars.push_back(cha);
                 break;
             }
-        merges.push_back(cha);
+        merges.push_back(chars);
+        chars.clear();
     }
 
     display(merges);
@@ -411,4 +426,18 @@ void pairs_to_most_frequent_merge(vector<vector<long long>>& pairs, unordered_ma
             cerr << "Error: " << e.what() << endl;
         }
     }
+}
+
+int space_index(string str)
+{
+    int n;
+    for (size_t i = 0; i < str.size(); ++i)
+    {
+        if (str[i]==' ')
+        {
+            n = i;
+            break;
+        }
+    }
+    return n;
 }
