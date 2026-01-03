@@ -38,7 +38,7 @@ int main()
     vector<vector<long long>> pair;
     tokens_to_pairs(tokens, pair);
 
-    pairs_to_most_frequent_merge(pair, vocab, (tokens.size() - 1));
+    pairs_to_most_frequent_merge(pair, vocab, 10);
 
     return 0;
 }
@@ -61,25 +61,21 @@ template <typename vectr> void display(vector<vector<vectr>>& vec)
 
 string byte_to_key(unsigned char b)
 {
-    if (b >= 32 && b <= 126 && b != '"' && b != '\\')
-    {
-        return std::string(1, static_cast<char>(b));
-    }
+    if (b >= 32 && b <= 126 && b != '"' && b != '\\') return string(1, static_cast<char>(b));
 
-    if (b < 128)
-    {
-        return std::string(1, static_cast<char>(b));
-    }
+    if (b < 128) return string(1, static_cast<char>(b));
 
     char first  = static_cast<char>(0xC0 | (b >> 6));
     char second = static_cast<char>(0x80 | (b & 0x3F));
 
-    return std::string{first, second};
+    return string{first, second};
 }
 
 void fetch_json_data(unordered_map<string, long long>& vcb)
 {
-    if (!fs::exists("vocab.json"))
+    string vocablury = "vocab.json";
+
+    if (!fs::exists(vocablury))
     {
         ordered_json vocab = ordered_json::object();
     
@@ -91,13 +87,13 @@ void fetch_json_data(unordered_map<string, long long>& vcb)
             vocab[key] = static_cast<long long>(i);
         }
     
-        std::ofstream out("vocab.json");
+        ofstream out(vocablury);
         out << vocab.dump(4);
         out.close();
 
         cout << "vocab.json Created Sucessfully..." << endl;
 
-        ifstream file("vocab.json");
+        ifstream file(vocablury);
         ordered_json data;
         file >> data;
 
@@ -110,13 +106,43 @@ void fetch_json_data(unordered_map<string, long long>& vcb)
     }
     else
     {
-        ifstream file("vocab.json");
-        ordered_json data;
-        file >> data;
-        file.close();
-        for(auto& [key, values] : data.items()) vcb[key] = values.get<long long>();
-
-        cout << "Data Fetched Sucessfully.." << endl;
+        if (fs::file_size(vocablury)!=0)
+        {
+            ifstream file(vocablury);
+            ordered_json data;
+            file >> data;
+            file.close();
+            for(auto& [key, values] : data.items()) vcb[key] = values.get<long long>();
+            cout << "Data Fetched Sucessfully.." << endl;
+        }
+        else
+        {
+            ordered_json vocab = ordered_json::object();
+        
+            for (int i = 0; i <= 255; ++i)
+            {
+                unsigned char b = static_cast<unsigned char>(i);
+                string key = byte_to_key(b);
+        
+                vocab[key] = static_cast<long long>(i);
+            }
+        
+            ofstream out(vocablury);
+            out << vocab.dump(4);
+            out.close();
+    
+            cout << "vocab.json Created Sucessfully..." << endl;
+    
+            ifstream file(vocablury);
+            ordered_json data;
+            file >> data;
+    
+            file.close();
+    
+            for(auto& [key, values] : data.items()) vcb[key] = values.get<long long>();
+    
+            cout << "Data Fetched Sucessfully.." << endl;
+        }
     }
 }
 
@@ -133,7 +159,7 @@ int fetch_text_data_to_tokens(unordered_map<string, long long>& vcb, vector<long
             auto it = vcb.find(key);
             
             if (it == vcb.end())
-                throw std::runtime_error("Byte not found in vocab");
+                throw runtime_error("Byte not found in vocab");
             tk.push_back(it->second);
         }
         cout << "Text Converts To Tokens From " << path << " Sucessfully..." << endl;
@@ -253,7 +279,10 @@ void pairs_to_most_frequent_merge(vector<vector<long long>>& pairs, unordered_ma
         string tk1 = token_to_char(vcb, fre[0].token1);
         string tk2 = token_to_char(vcb, fre[0].token2);
         string tk = tk1 + tk2;
-        ifstream vocab("vocab.json");
+        string file = "vocab.json";
+        
+        ifstream vocab(file);
+        
         if (!vocab.is_open()) cout << "vocab.json Can Not Open " << endl;
         else
         {   
@@ -264,18 +293,18 @@ void pairs_to_most_frequent_merge(vector<vector<long long>>& pairs, unordered_ma
             if (!data.contains(tk))
             {
                 long long max_id = -1;
-                for (auto& [k, v] : data.items()) max_id = std::max(max_id, v.get<long long>());
+                for (auto& [k, v] : data.items()) max_id = max(max_id, v.get<long long>());
                 data[tk] = max_id + 1;
     
                 most[tk] = max_id + 1;
         
                 fre[0].merge = max_id + 1;
     
-                std::ofstream out("vocab.json");
+                ofstream out(file);
                 out << data.dump(4);
                 out.close();
     
-                ofstream merges_file("merges.txt", std::ios::app);
+                ofstream merges_file("merges.txt", ios::app);
         
                 if(!merges_file.is_open()) cout << "Can not open or create merges.txt " << endl;
                 else
@@ -286,7 +315,7 @@ void pairs_to_most_frequent_merge(vector<vector<long long>>& pairs, unordered_ma
             }
         }
     
-        cout << "Most Frequent : "<< tk1 << " & " << tk2 << " => "<< tk << endl << endl; 
+        cout << i << " Most Frequent : "<< tk1 << " & " << tk2 << " => "<< tk << endl << endl; 
     
         if (pairs.size() != 1)
         {
