@@ -428,16 +428,25 @@ void encoding(vector<vector<string>>& pair, vector<vector<string>>& merges)
     
     unordered_map<string, long long> vocab;
     fetch_json_data(vocab);
-
-    for(size_t i = 0; i < pair.size() - 2; ++i)
-    {
+    
+    display(pair);
+    cout << endl << endl;
+    
+    for(size_t i = 0; i < pair.size(); ++i)
+    {   
         for(size_t j = 0; j < merges.size(); ++j)
         {
             if (merges[j][0]==pair[i][0] && merges[j][1]==pair[i][1])
             {
-                cout << pair[i][0] << " " << pair[i][1] << endl;
                 ++i;
+                pair.erase(pair.begin() + i);
+                break;
+            }
+            else if (merges[j][0]!=pair[i][0] && merges[j][1]==pair[i][1] || merges[j][0]==pair[i][0] && merges[j][1]!=pair[i][1])
+            {
+                break;
             }
         }
     }
+    display(pair);
 }
