@@ -7,10 +7,12 @@ int main()
     Encoding en;
     vector<long long> tk;
     vector<string> pair;
-    en.encoding("../data/test2.txt", pair, tk);
-    for (int i = 0; i < tk.size(); ++i)
+    en.train("../data/test2.txt", 4);
+    en.encoding("../data/test.txt", pair, tk);
+
+    for (size_t i = 0; i < tk.size(); ++i)
     {
-        cout << pair[i] << " : " << tk[i] << endl;
+        cout << tk[i] << " ";
     }
     return 0;
 }

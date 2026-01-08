@@ -24,15 +24,33 @@ struct Frequency
 class Encoding
 {
 private:
-	string path = "../model/merges.txt";
-	string vocablury = "../model/vocab.json";
 	vector<long long> tokens;
     vector<string> input_pair;
     vector<vector<string>> merges;
 	vector<vector<long long>> pair;
 	unordered_map<string , long long> vocab;
 
+	string path = "../model/merges.txt";
+	string vocablury = "../model/vocab.json";
+
 public:
+
+	void train(string path, long long train)
+	{
+	    fetch_json_data(vocab);
+    
+	    fetch_text_data_to_tokens(vocab, tokens, path);
+	
+	    tokens_to_pairs(tokens, pair);
+
+	    pairs_to_most_frequent_merge(pair, vocab, train);
+	}
+	
+	template <typename empty> void remove_empty(vector<vector<empty>>& vectr)
+	{
+	    for (size_t i = 0; i < vectr.size(); ++i)
+	        if (vectr[i].empty()) vectr.erase(vectr.begin() + i);
+	}
 
 	void preprocess_to_pairs(vector<vector<long long>>& vectr)
 	{
@@ -42,12 +60,6 @@ public:
 	            if (vectr.size() - 1) vectr[i].push_back(vectr[i][0]);
 	            else vectr[i].push_back(vectr[i + 1][0]);
 	        }
-	}
-	
-	template <typename empty> void remove_empty(vector<vector<empty>>& vectr)
-	{
-	    for (size_t i = 0; i < vectr.size(); ++i)
-	        if (vectr[i].empty()) vectr.erase(vectr.begin() + i);
 	}
 	
 	string byte_to_key(unsigned char b)
@@ -60,83 +72,6 @@ public:
 	    char second = static_cast<char>(0x80 | (b & 0x3F));
 	
 	    return string{first, second};
-	}
-	
-	void fetch_json_data(unordered_map<string, long long>& vcb)
-	{
-        fs::path dir_path = "../model";
-        
-        fs::create_directories(dir_path);
-	
-	    if (!fs::exists(vocablury))
-	    {
-	        ordered_json vocab = ordered_json::object();
-	    
-	        for (int i = 0; i <= 255; ++i)
-	        {
-	            unsigned char b = static_cast<unsigned char>(i);
-	            string key = byte_to_key(b);
-	    
-	            vocab[key] = static_cast<long long>(i);
-	        }
-	    
-	        ofstream out(vocablury);
-	        out << vocab.dump(4);
-	        out.close();
-	
-	        cout << "vocab.json Created Sucessfully..." << endl;
-	
-	        ifstream file(vocablury);
-	        ordered_json data;
-	        file >> data;
-	
-	        file.close();
-	
-	        for(auto& [key, values] : data.items()) vcb[key] = values.get<long long>();
-	
-	        cout << "Data Fetched Sucessfully.." << endl;
-	
-	    }
-	    else
-	    {
-	        if (fs::file_size(vocablury)!=0)
-	        {
-	            ifstream file(vocablury);
-	            ordered_json data;
-	            file >> data;
-	            file.close();
-	            for(auto& [key, values] : data.items()) vcb[key] = values.get<long long>();
-	            cout << "Data Fetched Sucessfully.." << endl;
-	        }
-	        else
-	        {
-	            ordered_json vocab = ordered_json::object();
-	        
-	            for (int i = 0; i <= 255; ++i)
-	            {
-	                unsigned char b = static_cast<unsigned char>(i);
-	                string key = byte_to_key(b);
-	        
-	                vocab[key] = static_cast<long long>(i);
-	            }
-	        
-	            ofstream out(vocablury);
-	            out << vocab.dump(4);
-	            out.close();
-	    
-	            cout << "vocab.json Created Sucessfully..." << endl;
-	    
-	            ifstream file(vocablury);
-	            ordered_json data;
-	            file >> data;
-	    
-	            file.close();
-	    
-	            for(auto& [key, values] : data.items()) vcb[key] = values.get<long long>();
-	    
-	            cout << "Data Fetched Sucessfully.." << endl;
-	        }
-	    }
 	}
 	
 	int fetch_text_data_to_tokens(unordered_map<string, long long>& vcb, vector<long long>& tk, string path)
@@ -244,6 +179,151 @@ public:
 	    return ch;
 	}
 	
+	void fetch_json_data(unordered_map<string, long long>& vcb)
+	{
+        fs::path dir_path = "../model";
+        
+        fs::create_directories(dir_path);
+	
+	    if (!fs::exists(vocablury))
+	    {
+	        ordered_json vocab = ordered_json::object();
+	    
+	        for (int i = 0; i <= 255; ++i)
+	        {
+	            unsigned char b = static_cast<unsigned char>(i);
+	            string key = byte_to_key(b);
+	    
+	            vocab[key] = static_cast<long long>(i);
+	        }
+	    
+	        ofstream out(vocablury);
+	        out << vocab.dump(4);
+	        out.close();
+	
+	        cout << "vocab.json Created Sucessfully..." << endl;
+	
+	        ifstream file(vocablury);
+	        ordered_json data;
+	        file >> data;
+	
+	        file.close();
+	
+	        for(auto& [key, values] : data.items()) vcb[key] = values.get<long long>();
+	
+	        cout << "Data Fetched Sucessfully.." << endl;
+	
+	    }
+	    else
+	    {
+	        if (fs::file_size(vocablury)!=0)
+	        {
+	            ifstream file(vocablury);
+	            ordered_json data;
+	            file >> data;
+	            file.close();
+	            for(auto& [key, values] : data.items()) vcb[key] = values.get<long long>();
+	            cout << "Data Fetched Sucessfully.." << endl;
+	        }
+	        else
+	        {
+	            ordered_json vocab = ordered_json::object();
+	        
+	            for (int i = 0; i <= 255; ++i)
+	            {
+	                unsigned char b = static_cast<unsigned char>(i);
+	                string key = byte_to_key(b);
+	        
+	                vocab[key] = static_cast<long long>(i);
+	            }
+	        
+	            ofstream out(vocablury);
+	            out << vocab.dump(4);
+	            out.close();
+	    
+	            cout << "vocab.json Created Sucessfully..." << endl;
+	    
+	            ifstream file(vocablury);
+	            ordered_json data;
+	            file >> data;
+	    
+	            file.close();
+	    
+	            for(auto& [key, values] : data.items()) vcb[key] = values.get<long long>();
+	    
+	            cout << "Data Fetched Sucessfully.." << endl;
+	        }
+	    }
+	}
+
+	void encoding(string input, vector<string>& pa, vector<long long>& tokens_ids)
+	{
+
+	   	string line;
+    	ifstream file(input);
+
+    	while(getline(file, line))
+    	{
+    	    for (int i = 0; i < line.size(); ++i) 
+    	    	if(line[i]==' ') input_pair.push_back("Ġ");
+    	    	else input_pair.push_back(string(1, line[i]));
+    	    line.clear();
+    	}
+
+    	line.clear();
+    	vector<string> chars;
+
+    	ifstream merge(path);
+
+    	while(getline(merge, line))
+    	{
+    	    for (size_t i = 0; i < input_pair.size(); ++i)
+    	        if (string(1, line[0])==input_pair[i])
+    	        {
+    	            string me = "";
+    	            for (size_t j = 0; j < line.size(); ++j)
+    	            {
+    	                if (line[j]==' ')
+    	                {
+    	                    chars.push_back(me);
+    	                    me.clear();
+    	                    continue;
+    	                }
+    	                else me += line[j];
+    	            }
+    	            chars.push_back(me);
+    	            me.clear();
+    	            break;
+    	        }
+    	    merges.push_back(chars);
+    	    chars.clear();
+    	}
+
+		for (int i = 0; i < merges.size(); ++i)
+		{
+			int fg = 0;
+			for (int j = 0; j < input_pair.size() - 1; ++j)
+			{
+				if (merges[i][0]==input_pair[j] && merges[i][1]==input_pair[j + 1])
+				{
+					input_pair[j] = input_pair[j] + input_pair[j + 1];
+					input_pair.erase(input_pair.begin() + j + 1);
+					fg = 1;
+				}
+			}
+			if(fg==1) i = 0;
+		}
+		
+		ifstream f("../model/vocab.json");
+
+		json data = json::parse(f);
+
+		for (int i = 0; i < input_pair.size(); ++i)
+		{
+			pa.push_back(input_pair[i]);
+			tokens_ids.push_back(data[input_pair[i]]);
+		}
+	}	
 	void pairs_to_most_frequent_merge(vector<vector<long long>>& pairs, unordered_map<string, long long>& vcb, int n)
 	{
 	    for (int i = 0; i < n; ++i)
@@ -357,84 +437,6 @@ public:
 	            cerr << "Error: " << e.what() << endl;
 	        }
 	    }
-	}
-
-	void train(string path, long long train)
-	{
-	    fetch_json_data(vocab);
-    
-	    fetch_text_data_to_tokens(vocab, tokens, path);
-	
-	    tokens_to_pairs(tokens, pair);
-
-	    pairs_to_most_frequent_merge(pair, vocab, train);
-	}
-
-	void encoding(string input, vector<string>& pa, vector<long long>& tokens_ids)
-	{
-
-	   	string line;
-    	ifstream file(input);
-
-    	while(getline(file, line))
-    	{
-    	    for (int i = 0; i < line.size(); ++i) input_pair.push_back(string(1, line[i]));
-    	    line.clear();
-    	}
-
-    	line.clear();
-    	vector<string> chars;
-
-    	ifstream merge(path);
-
-    	while(getline(merge, line))
-    	{
-    	    for (size_t i = 0; i < input_pair.size(); ++i)
-    	        if (string(1, line[0])==input_pair[i])
-    	        {
-    	            string me = "";
-    	            for (size_t j = 0; j < line.size(); ++j)
-    	            {
-    	                if (line[j]==' ')
-    	                {
-    	                    chars.push_back(me);
-    	                    me.clear();
-    	                    continue;
-    	                }
-    	                else me += line[j];
-    	            }
-    	            chars.push_back(me);
-    	            me.clear();
-    	            break;
-    	        }
-    	    merges.push_back(chars);
-    	    chars.clear();
-    	}
-
-		for (int i = 0; i < merges.size(); ++i)
-		{
-			int fg = 0;
-			for (int j = 0; j < input_pair.size() - 1; ++j)
-			{
-				if (merges[i][0]==input_pair[j] && merges[i][1]==input_pair[j + 1])
-				{
-					input_pair[j] = input_pair[j] + input_pair[j + 1];
-					input_pair.erase(input_pair.begin() + j + 1);
-					fg = 1;
-				}
-			}
-			if(fg==1) i = 0;
-		}
-		
-		ifstream f("../model/vocab.json");
-
-		json data = json::parse(f);
-
-		for (int i = 0; i < input_pair.size(); ++i)
-		{
-			pa.push_back(input_pair[i]);
-			tokens_ids.push_back(data[input_pair[i]]);
-		}
-	}
+	}	
 };
 #endif
