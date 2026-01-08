@@ -50,24 +50,6 @@ public:
 	        if (vectr[i].empty()) vectr.erase(vectr.begin() + i);
 	}
 	
-	template <typename vectr> void display(vector<vector<vectr>>& vec)
-	{
-	    for (auto& values : vec)
-	    {
-	        for (auto& value : values) cout << value << " ";
-	        cout << endl;
-	    }
-	}
-	
-	template <typename vectr> void display(vector<vectr>& vec)
-	{
-	    for (auto& values : vec)
-	    {
-	        cout << values << " ";
-	    }
-        cout << endl;
-	}
-	
 	string byte_to_key(unsigned char b)
 	{
 	    if (b >= 32 && b <= 126 && b != '"' && b != '\\') return string(1, static_cast<char>(b));
@@ -377,22 +359,31 @@ public:
 	    }
 	}
 
-	void fetch_data(string path)
+	void train(string path, long long train)
 	{
+	    fetch_json_data(vocab);
+    
+	    fetch_text_data_to_tokens(vocab, tokens, path);
+	
+	    tokens_to_pairs(tokens, pair);
+
+	    pairs_to_most_frequent_merge(pair, vocab, train);
+	}
+
+	void encoding(string input, vector<string>& pa, vector<long long>& tokens_ids)
+	{
+
 	   	string line;
-    	ifstream file(path);
+    	ifstream file(input);
 
     	while(getline(file, line))
     	{
     	    for (int i = 0; i < line.size(); ++i) input_pair.push_back(string(1, line[i]));
     	    line.clear();
     	}
-	}
 
-	void fetch_data()
-	{
-		string line;
-		vector<string> chars;
+    	line.clear();
+    	vector<string> chars;
 
     	ifstream merge(path);
 
@@ -418,22 +409,32 @@ public:
     	        }
     	    merges.push_back(chars);
     	    chars.clear();
-    	}    	
-	}
+    	}
 
-	void encoding(string path, long long train)
-	{
-	    fetch_json_data(vocab);
-    
-	    fetch_text_data_to_tokens(vocab, tokens, path);
-	
-	    tokens_to_pairs(tokens, pair);
+		for (int i = 0; i < merges.size(); ++i)
+		{
+			int fg = 0;
+			for (int j = 0; j < input_pair.size() - 1; ++j)
+			{
+				if (merges[i][0]==input_pair[j] && merges[i][1]==input_pair[j + 1])
+				{
+					input_pair[j] = input_pair[j] + input_pair[j + 1];
+					input_pair.erase(input_pair.begin() + j + 1);
+					fg = 1;
+				}
+			}
+			if(fg==1) i = 0;
+		}
+		
+		ifstream f("../model/vocab.json");
 
-	    pairs_to_most_frequent_merge(pair, vocab, train);
+		json data = json::parse(f);
 
-		fetch_data(path);
-
-		fetch_data();
+		for (int i = 0; i < input_pair.size(); ++i)
+		{
+			pa.push_back(input_pair[i]);
+			tokens_ids.push_back(data[input_pair[i]]);
+		}
 	}
 };
 #endif
