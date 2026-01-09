@@ -24,22 +24,31 @@ struct Frequency
 class Encoding
 {
 private:
+	
 	vector<long long> tokens;
     vector<string> input_pair;
     vector<vector<string>> merges;
 	vector<vector<long long>> pair;
 	unordered_map<string , long long> vocab;
-
+	
+	string input;
+	long long train;
 	string path = "../model/merges.txt";
 	string vocablury = "../model/vocab.json";
 
 public:
+	
+	Encoding(string s, long long tr)
+	{
+		input = s;
+		train = tr;
+	}
 
-	void train(string path, long long train)
+	void fit()
 	{
 	    fetch_json_data(vocab);
     
-	    fetch_text_data_to_tokens(vocab, tokens, path);
+	    fetch_text_data_to_tokens(vocab, tokens, input);
 	
 	    tokens_to_pairs(tokens, pair);
 
@@ -101,7 +110,7 @@ public:
 	{
 	    int ct = 0;
 	    vector<pairing> pair;
-	    for (int i = 0; i < tokens.size(); ++i)
+	    for (size_t i = 0; i < tokens.size(); ++i)
 	    {
 	        if (i!=(tokens.size() - 1))
 	        {
@@ -189,7 +198,7 @@ public:
 	    {
 	        ordered_json vocab = ordered_json::object();
 	    
-	        for (int i = 0; i <= 255; ++i)
+	        for (size_t i = 0; i <= 255; ++i)
 	        {
 	            unsigned char b = static_cast<unsigned char>(i);
 	            string key = byte_to_key(b);
@@ -229,7 +238,7 @@ public:
 	        {
 	            ordered_json vocab = ordered_json::object();
 	        
-	            for (int i = 0; i <= 255; ++i)
+	            for (size_t i = 0; i <= 255; ++i)
 	            {
 	                unsigned char b = static_cast<unsigned char>(i);
 	                string key = byte_to_key(b);
@@ -264,7 +273,7 @@ public:
 
     	while(getline(file, line))
     	{
-    	    for (int i = 0; i < line.size(); ++i) 
+    	    for (size_t i = 0; i < line.size(); ++i) 
     	    	if(line[i]==' ') input_pair.push_back("Ġ");
     	    	else input_pair.push_back(string(1, line[i]));
     	    line.clear();
@@ -299,10 +308,10 @@ public:
     	    chars.clear();
     	}
 
-		for (int i = 0; i < merges.size(); ++i)
+		for (size_t i = 0; i < merges.size(); ++i)
 		{
 			int fg = 0;
-			for (int j = 0; j < input_pair.size() - 1; ++j)
+			for (size_t j = 0; j < input_pair.size() - 1; ++j)
 			{
 				if (merges[i][0]==input_pair[j] && merges[i][1]==input_pair[j + 1])
 				{
@@ -318,15 +327,15 @@ public:
 
 		json data = json::parse(f);
 
-		for (int i = 0; i < input_pair.size(); ++i)
+		for (size_t i = 0; i < input_pair.size(); ++i)
 		{
 			pa.push_back(input_pair[i]);
 			tokens_ids.push_back(data[input_pair[i]]);
 		}
 	}	
-	void pairs_to_most_frequent_merge(vector<vector<long long>>& pairs, unordered_map<string, long long>& vcb, int n)
+	void pairs_to_most_frequent_merge(vector<vector<long long>>& pairs, unordered_map<string, long long>& vcb, long long n)
 	{
-	    for (int i = 0; i < n; ++i)
+	    for (size_t i = 0; i < n; ++i)
 	    {
 	        try
 	        {
