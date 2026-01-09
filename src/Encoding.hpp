@@ -30,21 +30,13 @@ private:
     vector<vector<string>> merges;
 	vector<vector<long long>> pair;
 	unordered_map<string , long long> vocab;
-	
-	string input;
-	long long train;
+
 	string path = "../model/merges.txt";
 	string vocablury = "../model/vocab.json";
 
 public:
 	
-	Encoding(string s, long long tr)
-	{
-		input = s;
-		train = tr;
-	}
-
-	void fit()
+	void fit(string input, long long train)
 	{
 	    fetch_json_data(vocab);
     
@@ -265,74 +257,91 @@ public:
 	    }
 	}
 
-	void encoding(string input, vector<string>& pa, vector<long long>& tokens_ids)
+	void encoding(string input_file, vector<string>& pa, vector<long long>& tokens_ids)
 	{
-
-	   	string line;
-    	ifstream file(input);
-
-    	while(getline(file, line))
+    	ifstream file(input_file);
+    	
+    	if (fs::exists(input_file) && fs::exists(path) && fs::exists(vocablury))
     	{
-    	    for (size_t i = 0; i < line.size(); ++i) 
-    	    	if(line[i]==' ') input_pair.push_back("Ġ");
-    	    	else input_pair.push_back(string(1, line[i]));
-    	    line.clear();
-    	}
+	   		string line;
+    		while(getline(file, line))
+    		{
+    		    for (size_t i = 0; i < line.size(); ++i) 
+    		    	if(line[i]==' ') input_pair.push_back("Ġ");
+    		    	else input_pair.push_back(string(1, line[i]));
+    		    line.clear();
+    		}
+			
+    		line.clear();
+    		vector<string> chars;
+	
+    		ifstream merge(path);
+    		
+    		while(true)
+    		{
+    			while(getline(merge, line))
+    			{
+    			    for (size_t i = 0; i < input_pair.size(); ++i)
+    			        if (string(1, line[0])==input_pair[i])
+    			        {
+    			            string me = "";
+    			            for (size_t j = 0; j < line.size(); ++j)
+    			            {
+    			                if (line[j]==' ')
+    			                {
+    			                    chars.push_back(me);
+    			                    me.clear();
+    			                    continue;
+    			                }
+    			                else me += line[j];
+    			            }
+    			            chars.push_back(me);
+    			            me.clear();
+    			            break;
+    			        }
+    			    merges.push_back(chars);
+    			    chars.clear();
+    			}
 
-    	line.clear();
-    	vector<string> chars;
-
-    	ifstream merge(path);
-
-    	while(getline(merge, line))
-    	{
-    	    for (size_t i = 0; i < input_pair.size(); ++i)
-    	        if (string(1, line[0])==input_pair[i])
-    	        {
-    	            string me = "";
-    	            for (size_t j = 0; j < line.size(); ++j)
-    	            {
-    	                if (line[j]==' ')
-    	                {
-    	                    chars.push_back(me);
-    	                    me.clear();
-    	                    continue;
-    	                }
-    	                else me += line[j];
-    	            }
-    	            chars.push_back(me);
-    	            me.clear();
-    	            break;
-    	        }
-    	    merges.push_back(chars);
-    	    chars.clear();
-    	}
-
-		for (size_t i = 0; i < merges.size(); ++i)
-		{
-			int fg = 0;
-			for (size_t j = 0; j < input_pair.size() - 1; ++j)
-			{
-				if (merges[i][0]==input_pair[j] && merges[i][1]==input_pair[j + 1])
+    			if (merges.size() > 0) break;
+				
+				for (size_t i = 0; i < merges.size(); ++i)
 				{
-					input_pair[j] = input_pair[j] + input_pair[j + 1];
-					input_pair.erase(input_pair.begin() + j + 1);
-					fg = 1;
+					int fg = 0;
+					for (size_t j = 0; j < input_pair.size() - 1; ++j)
+					{
+						if (merges[i][0]==input_pair[j] && merges[i][1]==input_pair[j + 1])
+						{
+							input_pair[j] = input_pair[j] + input_pair[j + 1];
+							input_pair.erase(input_pair.begin() + j + 1);
+							fg = 1;
+						}
+					}
+					if(fg==1) i = 0;
+				}
+    		}
+			
+			ifstream f(vocablury);
+	
+			json data = json::parse(f);
+	
+			for (size_t i = 0; i < input_pair.size(); ++i)
+			{
+				if (input_pair[i]=="Ġ")
+				{
+					pa.push_back(" ");
+					tokens_ids.push_back(data[" "]);
+				}
+				else
+				{
+					pa.push_back(input_pair[i]);
+					tokens_ids.push_back(data[input_pair[i]]);					
 				}
 			}
-			if(fg==1) i = 0;
-		}
-		
-		ifstream f("../model/vocab.json");
+    	}
+    	else cout << input_file << " or " << path << " or " << vocablury << " Doesn't Exist!!" << endl;
+	}
 
-		json data = json::parse(f);
-
-		for (size_t i = 0; i < input_pair.size(); ++i)
-		{
-			pa.push_back(input_pair[i]);
-			tokens_ids.push_back(data[input_pair[i]]);
-		}
-	}	
 	void pairs_to_most_frequent_merge(vector<vector<long long>>& pairs, unordered_map<string, long long>& vcb, long long n)
 	{
 	    for (size_t i = 0; i < n; ++i)
@@ -362,15 +371,16 @@ public:
 	                for (size_t j = 0; j < fre.size() - i - 1; ++j)
 	                    if (fre[j].ct < fre[j + 1].ct) swap(fre[j], fre[j + 1]);
 	                               
-	            string tk1 = token_to_char(vcb, fre[0].token1);
-	            string tk2 = token_to_char(vcb, fre[0].token2);
-	            string tk = tk1 + tk2;
-	            
+	            	            
 	            ifstream vocab(vocablury);
 	            
 	            if (!vocab.is_open()) cout << "vocab.json Can Not Open " << endl;
 	            else
 	            {   
+	            	string tk1 = token_to_char(vcb, fre[0].token1);
+	            	string tk2 = token_to_char(vcb, fre[0].token2);
+	            	string tk = tk1 + tk2;
+	                
 	                ordered_json data;
 	                vocab >> data;
 	                vocab.close();
@@ -399,47 +409,48 @@ public:
 	                        merges_file << tk1 << " " << tk2 << endl;            
 	                        merges_file.close();
 	                    }    
-	                }
-	            }
 	        
-	            cout << i + 1 << ". " << tk1 << " : " << fre[0].token1 << " & " << tk2 << " : " << fre[0].token2 << " => "<< tk << " : " << fre[0].merge << endl; 
-	            
-	            if (pairs.size() != 1)
-	            {
-	                for (size_t i = 0; i < pairs.size(); ++i)
-	                {
-	                    if (pairs[i][0]==fre[0].token1 && pairs[i][1]==fre[0].token2)
-	                    {
-	                        std::erase(pairs[i], fre[0].token1);
-	                        std::erase(pairs[i], fre[0].token2);
-	                        pairs[i].insert(pairs[i].begin(), fre[0].merge);
-	                        if (i==0)
-	                        {
-	                            std::erase(pairs[i], fre[0].merge);
-	                            auto it = find(pairs[i + 1].begin(), pairs[i + 1].end(), fre[0].token2);
-	                            if (it != pairs[i + 1].end()) pairs[i + 1].erase(it);
-	                            pairs[i + 1].insert(pairs[i + 1].begin(), fre[0].merge);
-	                        }
-	                        else if(i == (pairs.size() - 1))
-	                        {
-	                            std::erase(pairs[i], fre[0].merge);
-	                            std::erase(pairs[i - 1], fre[0].token1);
-	                            pairs[i - 1].insert(pairs[i - 1].begin(), fre[0].merge);
-	                        }
-	                        else
-	                        {
-	                            std::erase(pairs[i], fre[0].merge);
-	                            std::erase(pairs[i - 1], fre[0].token1);
-	                            std::erase(pairs[i + 1], fre[0].token2);
-	                            pairs[i - 1].insert(pairs[i - 1].end(), fre[0].merge);
-	                            pairs[i + 1].insert(pairs[i + 1].begin(), fre[0].merge);
-	                        }
-	                    }
+			            cout << i + 1 << ". " << tk1 << " : " << fre[0].token1 << " & " << tk2 << " : " << fre[0].token2 << " => "<< tk << " : " << fre[0].merge << endl; 
+			            
+			            if (pairs.size() != 1)
+			            {
+			                for (size_t i = 0; i < pairs.size(); ++i)
+			                {
+			                    if (pairs[i][0]==fre[0].token1 && pairs[i][1]==fre[0].token2)
+			                    {
+			                        std::erase(pairs[i], fre[0].token1);
+			                        std::erase(pairs[i], fre[0].token2);
+			                        pairs[i].insert(pairs[i].begin(), fre[0].merge);
+			                        if (i==0)
+			                        {
+			                            std::erase(pairs[i], fre[0].merge);
+			                            auto it = find(pairs[i + 1].begin(), pairs[i + 1].end(), fre[0].token2);
+			                            if (it != pairs[i + 1].end()) pairs[i + 1].erase(it);
+			                            pairs[i + 1].insert(pairs[i + 1].begin(), fre[0].merge);
+			                        }
+			                        else if(i == (pairs.size() - 1))
+			                        {
+			                            std::erase(pairs[i], fre[0].merge);
+			                            std::erase(pairs[i - 1], fre[0].token1);
+			                            pairs[i - 1].insert(pairs[i - 1].begin(), fre[0].merge);
+			                        }
+			                        else
+			                        {
+			                            std::erase(pairs[i], fre[0].merge);
+			                            std::erase(pairs[i - 1], fre[0].token1);
+			                            std::erase(pairs[i + 1], fre[0].token2);
+			                            pairs[i - 1].insert(pairs[i - 1].end(), fre[0].merge);
+			                            pairs[i + 1].insert(pairs[i + 1].begin(), fre[0].merge);
+			                        }
+			                    }
+			                }
+			                remove_empty(pairs);
+			                preprocess_to_pairs(pairs);
+			            }
+			            else break;
 	                }
-	                remove_empty(pairs);
-	                preprocess_to_pairs(pairs);
+	                else cout << i + 1 << " Already Exist In " << path << "!!" << endl;
 	            }
-	            else break;
 	        }
 	        catch (const runtime_error& e)
 	        {
