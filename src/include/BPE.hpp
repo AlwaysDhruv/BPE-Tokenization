@@ -1,4 +1,4 @@
-#ifndef PREPROCESśS_H
+#ifndef PREPROCESS_H
 #define PREPROCESS_H
 
 #include <iostream>
@@ -14,7 +14,6 @@ using json = nlohmann::json;
 namespace fs = std::filesystem;
 using ordered_json = nlohmann::ordered_json;
 
-static unordered_map<string, long long> most;
 
 struct Frequency
 {
@@ -24,16 +23,19 @@ struct Frequency
 class Encoding
 {
 	private:
+		
 		vector<long long> tokens;
 	    vector<string> input_pair;
 	    vector<vector<string>> merges;
 		vector<vector<long long>> pair;
+		unordered_map<string, long long> most;
 		unordered_map<string, long long> vocab;
 	
 		string path = "../model/merges.txt";
 		string vocablury = "../model/vocab.json";
 	
 	public:
+		
 		void decoding(vector<long long>& tk, vector<string>& out)
 		{
 			vocab.clear();
@@ -41,7 +43,7 @@ class Encoding
 	
 			for (const auto& pair : vocab)
 			{
-				for (int i = 0; i < tk.size(); ++i)
+				for (size_t i = 0; i < tk.size(); ++i)
 				{
 					if (pair.second==tk[i])
 					{
@@ -54,6 +56,8 @@ class Encoding
 
 		string decoding(long long tk)
 		{
+			string token;	
+			
 			vocab.clear();
 			fetch_json_data(vocab);
 			
@@ -61,10 +65,12 @@ class Encoding
 			{
 				if (pair.second==tk)
 				{
-					return pair.first;
+					token = pair.first;
 					break;
 				}
 			}
+			
+			return token;
 		}
 		
 		void fit(string input, long long train)
