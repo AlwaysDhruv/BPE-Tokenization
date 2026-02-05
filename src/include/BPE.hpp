@@ -396,6 +396,7 @@ class Tokenization
 	
 		void pairs_to_most_frequent_merge(vector<vector<long long>>& pairs, unordered_map<string, long long>& vcb, long long n)
 		{
+			int size = pairs.size();
 		    for (size_t i = 0; i < n; ++i)
 		    {
 		        try
@@ -508,6 +509,7 @@ class Tokenization
 		            cerr << "Error: " << e.what() << endl;
 		        }
 		    }
-		}	
+			cout << endl << endl << "Training complete " << n << " times with " << size << " pairs that stored in model directory..." << endl;
+		}
 };
 #endif

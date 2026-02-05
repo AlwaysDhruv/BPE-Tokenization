@@ -12,7 +12,7 @@ int main()
     vector<long long> token;
     vector<string> pair;
     
-    // tk.fit("../data/test.txt", 270);
+    tk.fit("../data/test.txt", 270);
     tk.encoding("../data/test2.txt", pair, token);
 
     for (int i = 0; i < pair.size(); ++i) cout << token[i] << " ";
