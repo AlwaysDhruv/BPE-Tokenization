@@ -11,21 +11,11 @@ int main()
     
     vector<long long> token;
     vector<string> pair;
+    tk.fit("../data/test.txt", 216);
+    //tk.encoding("../data/test2.txt", pair, token);
     
-    tk.fit("../data/test.txt", 270);
-    tk.encoding("../data/test2.txt", pair, token);
-
-    for (int i = 0; i < pair.size(); ++i) cout << token[i] << " ";
-    cout << endl << endl;
-    
-    //Decoding
+    // for (int i = 0; i < pair.size(); ++i) cout << token[i] << " ";
+    // cout << endl << endl;
         
-    pair.clear();
-
-    tk.decoding(token, pair);
-
-    for (int i = 0; i < pair.size(); ++i) cout << pair[i] << " ";
-    cout << endl << endl;
-    
     return 0;
 }
