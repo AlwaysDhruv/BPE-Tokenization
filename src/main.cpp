@@ -5,17 +5,15 @@ using namespace std;
 
 int main()
 {
-    Tokenization tk;
-    
-    // //Encoding
+    Tokenization tk;    
     
     vector<long long> token;
     vector<string> pair;
     tk.fit("../data/test.txt", 216);
-    //tk.encoding("../data/test2.txt", pair, token);
     
-    // for (int i = 0; i < pair.size(); ++i) cout << token[i] << " ";
-    // cout << endl << endl;
-        
+    tk.encoding("../data/test2.txt", pair, token);
+    
+    for (int i = 0; i < pair.size(); ++i) cout << token[i] << " ";
+    cout << endl << endl;
     return 0;
 }
