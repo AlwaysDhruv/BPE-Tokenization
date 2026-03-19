@@ -1,4 +1,4 @@
-# CPP-BPE-Tokenizer
+# Byte Pair Encoding Implement from scratch in C++
 
 A lightweight, efficient C++ implementation of Byte-Pair Encoding (BPE) for tokenization, suitable for training transformer models.
 
